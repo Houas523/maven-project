@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone Codebase') {
+            steps {
+                echo 'Clone Codebase'
+                git 'https://github.com/Houas523/maven-project.git'
+            }
+        }
+     stage('Compile') {
+            steps {
+                echo 'Compiling project'
+                withMaven(maven:'localMaven')
+                {
+                    sh "mvn compile"
+                }
+            }
+        }
+     stage('Unit Test') {
+            steps {
+                echo 'Testing'
+                withMaven(maven:'localMaven')
+                {
+                    sh "mvn test"
+                }
+            }
+        }
+     stage('Build Project') {
+            steps {
+                echo 'Packaging'
+                withMaven(maven:'localMaven')
+                {
+                    sh "mvn -B -DskipTests clean package"
+                }
+            }
+        }
+     stage('Analyse With SonarQube') {
+            steps {
+                echo 'Qualimetry Analyst'
+                withSonarQubeEnv(installationName:'localSonar' ,
+                credentialsId: 'cred4sonar')
+                {
+                    sh "mvn sonar:sonar "
+                }
+            }
+        }
+     stage('Deploy artifact') {
+            steps {
+                echo 'Deploying Project'
+            }
+        }
+    }
+}
